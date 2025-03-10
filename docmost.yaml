@@ -1,0 +1,55 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: docmost
+  namespace: docmost
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: docmost
+  template:
+    metadata:
+      labels:
+        app: docmost
+    spec:
+      securityContext:
+        runAsUser: 1000
+        runAsNonRoot: true
+      containers:
+      - name: docmost
+        image: docmost/docmost:latest
+        resources:
+          requests:
+            cpu: 100m
+            memory: 100Mi
+          limits:
+            cpu: 1
+            memory: 1Gi
+        env:
+        - name: APP_URL
+          value: "http://docmost.local"
+        - name: APP_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: docmost-secret
+              key: APP_SECRET
+        - name: DATABASE_URL
+          value: "postgresql://docmost:$(DATABASE_PASSWORD)@postgres:5432/docmost?schema=public"
+        - name: REDIS_URL
+          value: "redis://redis:6379"
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsUser: 1000
+          capabilities:
+            drop:
+            - ALL
+          runAsNonRoot: true
+        volumeMounts:
+        - mountPath: /app/data/storage
+          name: docmost-storage
+      volumes:
+      - name: docmost-storage
+        persistentVolumeClaim:
+          claimName: docmost-pvc
