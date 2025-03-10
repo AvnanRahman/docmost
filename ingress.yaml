@@ -5,6 +5,7 @@ metadata:
   name: docmost-ingress
   namespace: docmost
 spec:
+  ingressClassName: nginx
   rules:
   - host: docmost.local
     http:
